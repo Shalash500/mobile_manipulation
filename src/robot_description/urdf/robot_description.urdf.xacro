@@ -18,13 +18,21 @@
     <xacro:property name="wheel_z_offset" value="-0.05"/>
 
     <!-- arm robot properties -->
-     <xacro:property name="link_radius" value="0.025"/>
+    <xacro:property name="link_radius" value="0.025"/>
     <xacro:property name="shoulder_length" value="0.05"/>
     <xacro:property name="upper_arm_length" value="0.15"/>
     <xacro:property name="forearm_length" value="0.15"/>
     <xacro:property name="wrist_length" value="0.06"/>
     <xacro:property name="gripper_length" value="0.05"/>
     <xacro:property name="finger_length" value="0.04"/>
+
+    <xacro:property name="arm_base_mass" value="0.1"/>
+    <xacro:property name="shoulder_mass" value="0.2"/>
+    <xacro:property name="upper_arm_mass" value="0.3"/>
+    <xacro:property name="forearm_mass" value="0.25"/>
+    <xacro:property name="wrist_mass" value="0.15"/>
+    <xacro:property name="gripper_base_mass" value="0.15"/>
+    <xacro:property name="finger_mass" value="0.05"/>
 
     <!-- gripper properties -->
      <xacro:property name="finger_width" value="0.015"/>
@@ -116,6 +124,32 @@
     <xacro:wheel prefix="rear_left"   x_reflect="-1" y_reflect="1"/>
     <xacro:wheel prefix="rear_right"  x_reflect="-1" y_reflect="-1"/>
 
+    <xacro:macro name="cylinder_inertial" params="mass radius length *origin">
+        <inertial>
+            <xacro:insert_block name="origin"/>
+            <mass value="${mass}"/>
+            <inertia
+                ixx="${(1/12) * mass * (3*radius*radius + length*length)}"
+                ixy="0.0" ixz="0.0"
+                iyy="${(1/12) * mass * (3*radius*radius + length*length)}"
+                iyz="0.0"
+                izz="${(1/2) * mass * radius*radius}"/>
+        </inertial>
+    </xacro:macro>
+
+    <xacro:macro name="box_inertial" params="mass x y z *origin">
+        <inertial>
+            <xacro:insert_block name="origin"/>
+            <mass value="${mass}"/>
+            <inertia
+                ixx="${(1/12) * mass * (y*y + z*z)}"
+                ixy="0.0" ixz="0.0"
+                iyy="${(1/12) * mass * (x*x + z*z)}"
+                iyz="0.0"
+                izz="${(1/12) * mass * (x*x + y*y)}"/>
+        </inertial>
+    </xacro:macro>
+
     <link name="arm_mount_link"/>
 
     <joint name="arm_mount_joint" type="fixed">
@@ -133,6 +167,14 @@
                 <color rgba="0.8 0.3 0.1 1.0"/>
             </material>
         </visual>
+        <collision>
+            <geometry>
+                <cylinder radius="${link_radius*1.5}" length="${shoulder_length}"/>
+            </geometry>
+        </collision>
+        <xacro:cylinder_inertial mass="${arm_base_mass}" radius="${link_radius*1.5}" length="${shoulder_length}">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:cylinder_inertial>
     </link>
 
     <joint name="arm_base_joint" type="fixed">
@@ -148,6 +190,14 @@
             </geometry>
             <material name="arm_color"/>
         </visual>
+        <collision>
+            <geometry>
+                <cylinder radius="${link_radius}" length="${shoulder_length}"/>
+            </geometry>
+        </collision>
+        <xacro:cylinder_inertial mass="${shoulder_mass}" radius="${link_radius}" length="${shoulder_length}">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:cylinder_inertial>
     </link>
 
     <joint name="shoulder_yaw_joint" type="revolute">
@@ -166,6 +216,15 @@
             </geometry>
             <material name="arm_color"/>
         </visual>
+        <collision>
+            <origin xyz="0 0 ${upper_arm_length/2}" rpy="0 0 0"/>
+            <geometry>
+                <cylinder radius="${link_radius}" length="${upper_arm_length}"/>
+            </geometry>
+        </collision>
+        <xacro:cylinder_inertial mass="${upper_arm_mass}" radius="${link_radius}" length="${upper_arm_length}">
+            <origin xyz="0 0 ${upper_arm_length/2}" rpy="0 0 0"/>
+        </xacro:cylinder_inertial>
     </link>
 
     <joint name="shoulder_pitch_joint" type="revolute">
@@ -184,6 +243,15 @@
             </geometry>
             <material name="arm_color"/>
         </visual>
+        <collision>
+            <origin xyz="0 0 ${forearm_length/2}" rpy="0 0 0"/>
+            <geometry>
+                <cylinder radius="${link_radius*0.8}" length="${forearm_length}"/>
+            </geometry>
+        </collision>
+        <xacro:cylinder_inertial mass="${forearm_mass}" radius="${link_radius*0.8}" length="${forearm_length}">
+            <origin xyz="0 0 ${forearm_length/2}" rpy="0 0 0"/>
+        </xacro:cylinder_inertial>
     </link>
 
     <joint name="elbow_pitch_joint" type="revolute">
@@ -202,6 +270,15 @@
             </geometry>
             <material name="arm_color"/>
         </visual>
+        <collision>
+            <origin xyz="0 0 ${wrist_length/2}" rpy="0 0 0"/>
+            <geometry>
+                <cylinder radius="${link_radius*0.7}" length="${wrist_length}"/>
+            </geometry>
+        </collision>
+        <xacro:cylinder_inertial mass="${wrist_mass}" radius="${link_radius*0.7}" length="${wrist_length}">
+            <origin xyz="0 0 ${wrist_length/2}" rpy="0 0 0"/>
+        </xacro:cylinder_inertial>
     </link>
 
     <joint name="wrist_pitch_joint" type="revolute">
@@ -222,6 +299,15 @@
                 <color rgba="0.2 0.2 0.2 1.0"/>
             </material>
         </visual>
+        <collision>
+            <origin xyz="0 0 ${gripper_length/2}" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.05 0.06 ${gripper_length}"/>
+            </geometry>
+        </collision>
+        <xacro:box_inertial mass="${gripper_base_mass}" x="0.05" y="0.06" z="${gripper_length}">
+            <origin xyz="0 0 ${gripper_length/2}" rpy="0 0 0"/>
+        </xacro:box_inertial>
     </link>
 
     <joint name="gripper_mount_joint" type="fixed">
@@ -238,6 +324,15 @@
             </geometry>
             <material name="gripper_color"/>
         </visual>
+        <collision>
+            <origin xyz="0 0 ${finger_length/2}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${finger_thickness} ${finger_width} ${finger_length}"/>
+            </geometry>
+        </collision>
+        <xacro:box_inertial mass="${finger_mass}" x="${finger_thickness}" y="${finger_width}" z="${finger_length}">
+            <origin xyz="0 0 ${finger_length/2}" rpy="0 0 0"/>
+        </xacro:box_inertial>
     </link>
 
     <joint name="left_finger_joint" type="prismatic">
@@ -256,6 +351,15 @@
             </geometry>
             <material name="gripper_color"/>
         </visual>
+        <collision>
+            <origin xyz="0 0 ${finger_length/2}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${finger_thickness} ${finger_width} ${finger_length}"/>
+            </geometry>
+        </collision>
+        <xacro:box_inertial mass="${finger_mass}" x="${finger_thickness}" y="${finger_width}" z="${finger_length}">
+            <origin xyz="0 0 ${finger_length/2}" rpy="0 0 0"/>
+        </xacro:box_inertial>
     </link>
 
     <joint name="right_finger_joint" type="prismatic">
