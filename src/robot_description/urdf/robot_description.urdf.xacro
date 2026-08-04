@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <robot name="four_wheel_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
+    <!-- mobile robot properties -->
     <xacro:property name="base_length" value="0.6"/>
     <xacro:property name="base_width" value="0.4"/>
     <xacro:property name="base_height" value="0.2"/>
@@ -13,6 +14,20 @@
     <xacro:property name="wheel_x_offset" value="0.2"/>
     <xacro:property name="wheel_y_offset" value="0.225"/>
     <xacro:property name="wheel_z_offset" value="-0.05"/>
+
+    <!-- arm robot properties -->
+     <xacro:property name="link_radius" value="0.025"/>
+    <xacro:property name="shoulder_length" value="0.05"/>
+    <xacro:property name="upper_arm_length" value="0.15"/>
+    <xacro:property name="forearm_length" value="0.15"/>
+    <xacro:property name="wrist_length" value="0.06"/>
+    <xacro:property name="gripper_length" value="0.05"/>
+    <xacro:property name="finger_length" value="0.04"/>
+
+    <!-- gripper properties -->
+     <xacro:property name="finger_width" value="0.015"/>
+    <xacro:property name="finger_thickness" value="0.01"/>
+    <xacro:property name="finger_gap" value="0.015"/>
 
     <link name="base_footprint"/>
 
@@ -105,6 +120,149 @@
         <parent link="base_link"/>
         <child link="arm_mount_link"/>
         <origin xyz="0.1 0 ${base_height/2}" rpy="0 0 0"/>
+    </joint>
+
+    <link name="arm_base_link">
+        <visual>
+            <geometry>
+                <cylinder radius="${link_radius*1.5}" length="${shoulder_length}"/>
+            </geometry>
+            <material name="arm_color">
+                <color rgba="0.8 0.3 0.1 1.0"/>
+            </material>
+        </visual>
+    </link>
+
+    <joint name="arm_base_joint" type="fixed">
+        <parent link="arm_mount_link"/>
+        <child link="arm_base_link"/>
+        <origin xyz="0 0 ${shoulder_length/2}" rpy="0 0 0"/>
+    </joint>
+
+    <link name="shoulder_link">
+        <visual>
+            <geometry>
+                <cylinder radius="${link_radius}" length="${shoulder_length}"/>
+            </geometry>
+            <material name="arm_color"/>
+        </visual>
+    </link>
+
+    <joint name="shoulder_yaw_joint" type="revolute">
+        <parent link="arm_base_link"/>
+        <child link="shoulder_link"/>
+        <origin xyz="0 0 ${shoulder_length/2}" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
+        <limit lower="-3.1416" upper="3.1416" effort="10" velocity="1.0"/>
+    </joint>
+
+    <link name="upper_arm_link">
+        <visual>
+            <origin xyz="0 0 ${upper_arm_length/2}" rpy="0 0 0"/>
+            <geometry>
+                <cylinder radius="${link_radius}" length="${upper_arm_length}"/>
+            </geometry>
+            <material name="arm_color"/>
+        </visual>
+    </link>
+
+    <joint name="shoulder_pitch_joint" type="revolute">
+        <parent link="shoulder_link"/>
+        <child link="upper_arm_link"/>
+        <origin xyz="0 0 ${shoulder_length/2}" rpy="0 0 0"/>
+        <axis xyz="0 1 0"/>
+        <limit lower="-1.5708" upper="1.5708" effort="10" velocity="1.0"/>
+    </joint>
+
+    <link name="forearm_link">
+        <visual>
+            <origin xyz="0 0 ${forearm_length/2}" rpy="0 0 0"/>
+            <geometry>
+                <cylinder radius="${link_radius*0.8}" length="${forearm_length}"/>
+            </geometry>
+            <material name="arm_color"/>
+        </visual>
+    </link>
+
+    <joint name="elbow_pitch_joint" type="revolute">
+        <parent link="upper_arm_link"/>
+        <child link="forearm_link"/>
+        <origin xyz="0 0 ${upper_arm_length}" rpy="0 0 0"/>
+        <axis xyz="0 1 0"/>
+        <limit lower="0" upper="2.618" effort="10" velocity="1.0"/>
+    </joint>
+
+    <link name="wrist_link">
+        <visual>
+            <origin xyz="0 0 ${wrist_length/2}" rpy="0 0 0"/>
+            <geometry>
+                <cylinder radius="${link_radius*0.7}" length="${wrist_length}"/>
+            </geometry>
+            <material name="arm_color"/>
+        </visual>
+    </link>
+
+    <joint name="wrist_pitch_joint" type="revolute">
+        <parent link="forearm_link"/>
+        <child link="wrist_link"/>
+        <origin xyz="0 0 ${forearm_length}" rpy="0 0 0"/>
+        <axis xyz="0 1 0"/>
+        <limit lower="-1.5708" upper="1.5708" effort="5" velocity="1.0"/>
+    </joint>
+
+    <link name="gripper_base_link">
+        <visual>
+            <origin xyz="0 0 ${gripper_length/2}" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.05 0.06 ${gripper_length}"/>
+            </geometry>
+            <material name="gripper_color">
+                <color rgba="0.2 0.2 0.2 1.0"/>
+            </material>
+        </visual>
+    </link>
+
+    <joint name="gripper_mount_joint" type="fixed">
+        <parent link="wrist_link"/>
+        <child link="gripper_base_link"/>
+        <origin xyz="0 0 ${wrist_length}" rpy="0 0 0"/>
+    </joint>
+
+    <link name="left_finger_link">
+        <visual>
+            <origin xyz="0 0 ${finger_length/2}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${finger_thickness} ${finger_width} ${finger_length}"/>
+            </geometry>
+            <material name="gripper_color"/>
+        </visual>
+    </link>
+
+    <joint name="left_finger_joint" type="prismatic">
+        <parent link="gripper_base_link"/>
+        <child link="left_finger_link"/>
+        <origin xyz="0 ${finger_gap} ${gripper_length}" rpy="0 0 0"/>
+        <axis xyz="0 1 0"/>
+        <limit lower="0" upper="0.02" effort="5" velocity="0.5"/>
+    </joint>
+
+    <link name="right_finger_link">
+        <visual>
+            <origin xyz="0 0 ${finger_length/2}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${finger_thickness} ${finger_width} ${finger_length}"/>
+            </geometry>
+            <material name="gripper_color"/>
+        </visual>
+    </link>
+
+    <joint name="right_finger_joint" type="prismatic">
+        <parent link="gripper_base_link"/>
+        <child link="right_finger_link"/>
+        <origin xyz="0 -${finger_gap} ${gripper_length}" rpy="0 0 0"/>
+        <axis xyz="0 1 0"/>
+        <limit lower="-0.02" upper="0" effort="5" velocity="0.5"/>
+        <mimic joint="left_finger_joint" multiplier="-1" offset="0"/>
     </joint>
 
 </robot>
