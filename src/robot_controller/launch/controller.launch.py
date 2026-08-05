@@ -1,7 +1,10 @@
 from launch import LaunchDescription
 from launch_ros.actions import Node
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration
+from ament_index_python.packages import get_package_share_directory
+from launch_ros.parameter_descriptions import ParameterValue
+from launch.substitutions import Command
+import os
 
 def generate_launch_description():
 
@@ -13,6 +16,44 @@ def generate_launch_description():
     wheel_seperation_arg = DeclareLaunchArgument(
         "wheel_seperation",
         default_value="0.2"
+    )
+
+    robot_description = ParameterValue(
+            Command(
+                [
+                    "xacro ",
+                    os.path.join(
+                        get_package_share_directory("robot_description"),
+                        "urdf",
+                        "robot_description.urdf.xacro",
+                    ),
+                ]
+            ),
+            value_type=str,
+        )
+
+    node_robot_state_publisher = Node(
+        package='robot_state_publisher',
+        executable='robot_state_publisher',
+        output='screen',
+        parameters=[{
+            'robot_description': robot_description,
+            'use_sim_time': True
+        }]
+    )
+
+    controller_manager = Node(
+        package="controller_manager",
+        executable="ros2_control_node",
+        parameters=[
+            {"robot_description": robot_description,
+             "use_sim_time": True},
+            os.path.join(
+                get_package_share_directory("robot_controller"),
+                "config",
+                "robot_controllers.yaml",
+            ),
+        ],
     )
 
     joint_state_broadcaster_spawner = Node(
@@ -35,9 +76,25 @@ def generate_launch_description():
         ]
     )
 
+    arm_controller_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["arm_controller", "--controller-manager", "/controller_manager"],
+    )
+
+    gripper_controller_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["gripper_controller", "--controller-manager", "/controller_manager"],
+    )
+
     return LaunchDescription([
         wheel_radius_arg,
         wheel_seperation_arg,
+        node_robot_state_publisher,
+        controller_manager,
         joint_state_broadcaster_spawner,
-        wheel_controller_spawner
+        wheel_controller_spawner,
+        arm_controller_spawner,
+        gripper_controller_spawner
     ])
