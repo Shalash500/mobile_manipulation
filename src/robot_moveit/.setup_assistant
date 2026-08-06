@@ -1,0 +1,10 @@
+moveit_setup_assistant_config:
+  urdf:
+    package: robot_description
+    relative_path: urdf/robot_description.urdf.xacro
+  srdf:
+    relative_path: config/four_wheel_robot.srdf
+  package_settings:
+    author_name: Shalash
+    author_email: ahmed02shalash@gmail.com
+    generated_timestamp: 1786045467
