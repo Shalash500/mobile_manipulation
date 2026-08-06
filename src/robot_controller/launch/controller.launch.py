@@ -5,16 +5,6 @@ from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
 
-    wheel_radius_arg = DeclareLaunchArgument(
-        "wheel_radius",
-        default_value="0.1"
-    )
-
-    wheel_seperation_arg = DeclareLaunchArgument(
-        "wheel_seperation",
-        default_value="0.2"
-    )
-
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",
@@ -48,8 +38,6 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        wheel_radius_arg,
-        wheel_seperation_arg,
         joint_state_broadcaster_spawner,
         wheel_controller_spawner,
         arm_controller_spawner,
