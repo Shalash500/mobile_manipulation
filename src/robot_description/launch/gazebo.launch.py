@@ -32,6 +32,12 @@ def generate_launch_description():
         ]
     )
 
+    world_file = os.path.join(
+        pkg_share,
+        'worlds',
+        'world.sdf'
+    )
+
     gazebo_resource_path = SetEnvironmentVariable(
         name='GZ_SIM_RESOURCE_PATH',
         value=[
@@ -48,7 +54,7 @@ def generate_launch_description():
             )
         ),
         launch_arguments=[
-            ("gz_args", [" -v 4", " -r", " empty.sdf"])
+            ("gz_args", [" -v 4", " -r ", world_file])
         ]
     )
 
@@ -58,7 +64,9 @@ def generate_launch_description():
         output="screen",
         arguments=[
             '-topic', 'robot_description',
-            '-name', 'mobile_manipulator_robot'
+            '-name', 'mobile_manipulator_robot',
+            '-z', '0.1',
+            '-Y', '1.57'
         ],
     )
 
