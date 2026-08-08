@@ -42,7 +42,7 @@
             <fdir1>1 0 0</fdir1>
     </gazebo>
 
-    <gazebo>
+    <gazebo reference="lidar_link">
         <sensor name="lidar_sensor" type="gpu_lidar">
             <topic>/scan</topic>
             <update_rate>30</update_rate>
