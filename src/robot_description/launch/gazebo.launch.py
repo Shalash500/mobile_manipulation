@@ -38,6 +38,13 @@ def generate_launch_description():
         'world.sdf'
     )
 
+    bridge_config = os.path.join(
+        pkg_share,
+        'config',
+        'gz_bridge.yaml'
+    )
+
+
     gazebo_resource_path = SetEnvironmentVariable(
         name='GZ_SIM_RESOURCE_PATH',
         value=[
@@ -70,17 +77,21 @@ def generate_launch_description():
         ],
     )
 
-    clock_bridge = Node(
-    package='ros_gz_bridge',
-    executable='parameter_bridge',
-    arguments=['/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock'],
-    output='screen'
-)
+    bridge = Node(
+        package='ros_gz_bridge',
+        executable='parameter_bridge',
+        parameters=[
+            {'config_file': bridge_config,
+             'use_sim_time': True}
+        ],
+        output='screen'
+    )
+
 
     return LaunchDescription([
         robot_state_publisher,
         gazebo_resource_path,
         gazebo,
         spawn_robot,
-        clock_bridge
+        bridge
     ])
